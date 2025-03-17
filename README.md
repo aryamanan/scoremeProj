@@ -20,7 +20,7 @@ This is my ScoreMe hackathon submission. A simple tool to extract tables from PD
 
 ### Python (Optional - for enhanced Excel processing)
 - Python 3.8 or higher
-- pandas
+- pandas (openpyxl alone wasn't working that well)
 - openpyxl
 
 ## Quick Start
