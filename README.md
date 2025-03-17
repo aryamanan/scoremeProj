@@ -130,5 +130,3 @@ Check out the `validation_material` folder - I've included some sample PDFs you 
    npm cache clean --force
    npm install
    ```
-
-Let me know if you run into any issues!
