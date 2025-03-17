@@ -18,11 +18,6 @@ Hey! 👋 This is a simple tool I made to extract tables from PDFs and convert t
 - TypeScript
 - Vite 5.4
 
-### Python (Optional - for enhanced Excel processing)
-- Python 3.8 or higher
-- pandas
-- openpyxl
-
 ## Quick Start
 
 1. Clone the repo:
@@ -54,20 +49,7 @@ Hey! 👋 This is a simple tool I made to extract tables from PDFs and convert t
    ```
    The frontend will start on http://localhost:5173
 
-4. (Optional) Set up Python environment for enhanced Excel processing:
-   ```bash
-   # Create and activate virtual environment
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-   # Install required packages
-   pip install pandas openpyxl
-
-   # Process an Excel file
-   python src/main/python/excel_processor.py output.xlsx
-   ```
-
-5. Open http://localhost:5173 in your browser
+4. Open http://localhost:5173 in your browser
 
 ## Test it out
 
@@ -83,12 +65,6 @@ Check out the `validation_material` folder - I've included some sample PDFs you 
 - Supports multiple tables per page
 - Exports each table to a separate Excel sheet
 - Maintains data formatting (numbers, dates, text)
-- Enhanced Excel processing with pandas (optional):
-  - Automatic date format detection
-  - Number formatting and rounding
-  - Column width optimization
-  - Empty row/column removal
-  - Consistent key-value pair formatting
 
 ## Dependencies in Detail
 
@@ -137,12 +113,6 @@ Check out the `validation_material` folder - I've included some sample PDFs you 
 }
 ```
 
-### Python Dependencies (from requirements.txt)
-```
-pandas>=2.0.0
-openpyxl>=3.1.0
-```
-
 ## Notes
 - Works best with well-structured PDFs
 - Handles multiple tables per page
@@ -151,7 +121,6 @@ openpyxl>=3.1.0
 - Regular tables maintain their original structure
 - Supports automatic column width adjustment
 - Handles special characters and formatting
-- Optional pandas-based post-processing for enhanced Excel output
 
 ## Common Issues & Solutions
 
@@ -167,13 +136,6 @@ openpyxl>=3.1.0
    # Clear npm cache and try again
    npm cache clean --force
    npm install
-   ```
-
-3. If Python dependencies fail to install:
-   ```bash
-   # Upgrade pip first
-   python -m pip install --upgrade pip
-   pip install -r requirements.txt
    ```
 
 Let me know if you run into any issues! 
