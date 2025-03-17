@@ -86,7 +86,7 @@ public class TableExtractorController {
             // Set up response headers
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            headers.setContentDispositionFormData("attachment", "bank_statement.xlsx");
+            headers.setContentDispositionFormData("attachment", "pdf_extract.xlsx");
             
             log.info("Successfully exported tables to Excel");
             return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
