@@ -1,6 +1,6 @@
 # PDF Data Extractor
 
-Hey! 👋 This is a simple tool I made to extract tables from PDFs and convert them into Excel files. It's pretty straightforward to use - just upload a PDF and it'll give you back an Excel file with all the tables it finds.
+This is my ScoreMe hackathon submission. A simple tool to extract tables from PDFs and convert them into Excel files. It's pretty straightforward to use - just upload a PDF and it'll give you back an Excel file with all the tables it finds.
 
 ## Requirements
 
@@ -124,18 +124,11 @@ Check out the `validation_material` folder - I've included some sample PDFs you 
 
 ## Common Issues & Solutions
 
-1. If port 8080 is already in use:
-   ```bash
-   # Find and kill the process using port 8080
-   lsof -i :8080
-   kill -9 <PID>
-   ```
-
-2. If npm install fails:
+1. If npm install fails (happened many times to me):
    ```bash
    # Clear npm cache and try again
    npm cache clean --force
    npm install
    ```
 
-Let me know if you run into any issues! 
+Let me know if you run into any issues!
