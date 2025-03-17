@@ -44,23 +44,50 @@ function App() {
 
   const extractAccountInfo = (data: BankStatement[]) => {
     const accountDetails: Record<string, string> = {};
-    const firstPage = data.find(page => page.pageNumber === 1);
-    
-    if (firstPage) {
-      firstPage.rows.forEach(row => {
-        const value = Object.values(row)[0];
-        if (value.includes('Account No')) {
-          accountDetails['Account Number'] = value.split(':')[1].trim();
-        } else if (value.includes('A/C Name')) {
-          accountDetails['Account Name'] = value.split(':')[1].trim();
-        } else if (value.includes('BANK NAME')) {
-          accountDetails['Bank Name'] = value.split(':')[1].trim();
-        } else if (value.includes('BRANCH NAME')) {
-          accountDetails['Branch'] = value.split(':')[1].trim();
-        } else if (value.includes('IFSC Code')) {
-          accountDetails['IFSC Code'] = value.split(':')[1].trim();
-        }
-      });
+    try {
+      const firstPage = data.find(page => page.pageNumber === 1);
+      
+      if (firstPage && firstPage.rows) {
+        firstPage.rows.forEach(row => {
+          if (!row) return;
+          
+          const values = Object.values(row);
+          if (!values || values.length === 0) return;
+          
+          const value = values[0];
+          if (!value) return;
+
+          if (value.includes('Account No')) {
+            const parts = value.split(':');
+            if (parts.length > 1) {
+              accountDetails['Account Number'] = parts[1].trim();
+            }
+          } else if (value.includes('A/C Name')) {
+            const parts = value.split(':');
+            if (parts.length > 1) {
+              accountDetails['Account Name'] = parts[1].trim();
+            }
+          } else if (value.includes('BANK NAME')) {
+            const parts = value.split(':');
+            if (parts.length > 1) {
+              accountDetails['Bank Name'] = parts[1].trim();
+            }
+          } else if (value.includes('BRANCH NAME')) {
+            const parts = value.split(':');
+            if (parts.length > 1) {
+              accountDetails['Branch'] = parts[1].trim();
+            }
+          } else if (value.includes('IFSC Code')) {
+            const parts = value.split(':');
+            if (parts.length > 1) {
+              accountDetails['IFSC Code'] = parts[1].trim();
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error extracting account info:', error);
+      // Return empty object on error rather than throwing
     }
     return accountDetails;
   };
@@ -83,35 +110,67 @@ function App() {
         body: formData,
       })
 
+      let responseData;
       const responseText = await response.text()
-      if (!response.ok) {
-        throw new Error(responseText || 'Failed to process PDF')
-      }
-
+      
       try {
-        const data = JSON.parse(responseText)
-        setTableData(data)
-        setAccountInfo(extractAccountInfo(data))
-        
-        // Then, get Excel file
-        setProcessingStatus('Generating Excel file...')
-        const excelResponse = await fetch('http://localhost:8080/api/extract-and-export', {
-          method: 'POST',
-          body: formData,
-        })
-
-        if (!excelResponse.ok) {
-          const excelError = await excelResponse.text()
-          throw new Error(excelError || 'Failed to generate Excel file')
-        }
-
-        const excelData = await excelResponse.blob()
-        setExcelBlob(excelData)
-        setProcessingStatus('Processing complete!')
+        responseData = JSON.parse(responseText)
       } catch (parseError) {
-        console.error('Error parsing response:', parseError)
-        throw new Error('Invalid response from server')
+        console.error('Error parsing response:', parseError, 'Response text:', responseText)
+        throw new Error('Invalid JSON response from server')
       }
+
+      if (!response.ok) {
+        throw new Error(responseData.error || responseData.message || 'Failed to process PDF')
+      }
+
+      // Validate response data structure
+      if (!Array.isArray(responseData)) {
+        throw new Error('Invalid data format: expected an array of tables')
+      }
+
+      // Validate each table in the response
+      responseData.forEach((table, index) => {
+        if (!table.headers || !Array.isArray(table.headers)) {
+          throw new Error(`Invalid table format at index ${index}: missing headers array`)
+        }
+        if (!table.rows || !Array.isArray(table.rows)) {
+          throw new Error(`Invalid table format at index ${index}: missing rows array`)
+        }
+        if (typeof table.pageNumber !== 'number') {
+          throw new Error(`Invalid table format at index ${index}: missing page number`)
+        }
+      })
+
+      setTableData(responseData)
+      setAccountInfo(extractAccountInfo(responseData))
+      
+      // Then, get Excel file
+      setProcessingStatus('Generating Excel file...')
+      const excelResponse = await fetch('http://localhost:8080/api/extract-and-export', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!excelResponse.ok) {
+        const excelErrorText = await excelResponse.text()
+        let excelError
+        try {
+          excelError = JSON.parse(excelErrorText)
+          throw new Error(excelError.error || excelError.message || 'Failed to generate Excel file')
+        } catch (parseError) {
+          console.error('Error parsing Excel error response:', parseError, 'Response text:', excelErrorText)
+          throw new Error('Failed to generate Excel file')
+        }
+      }
+
+      const excelData = await excelResponse.blob()
+      if (!excelData || excelData.size === 0) {
+        throw new Error('Generated Excel file is empty')
+      }
+      
+      setExcelBlob(excelData)
+      setProcessingStatus('Processing complete!')
     } catch (error) {
       console.error('Error uploading PDF:', error)
       setError(error instanceof Error ? error.message : 'Failed to process PDF')
