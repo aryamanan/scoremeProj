@@ -155,14 +155,7 @@ openpyxl>=3.1.0
 
 ## Common Issues & Solutions
 
-1. If port 8080 is already in use:
-   ```bash
-   # Find and kill the process using port 8080
-   lsof -i :8080
-   kill -9 <PID>
-   ```
-
-2. If npm install fails:
+1. If npm install fails (happened many times to me):
    ```bash
    # Clear npm cache and try again
    npm cache clean --force
