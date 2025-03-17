@@ -1,6 +1,6 @@
 # PDF Data Extractor
 
-Hey! 👋 This is a simple tool I made to extract tables from PDFs and convert them into Excel files. It's pretty straightforward to use - just upload a PDF and it'll give you back an Excel file with all the tables it finds.
+This is my submission. A simple tool to extract tables from PDFs and convert them into Excel files. It's pretty straightforward to use - just upload a PDF and it'll give you back an Excel file with all the tables it finds.
 
 ## Requirements
 
