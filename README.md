@@ -168,5 +168,3 @@ openpyxl>=3.1.0
    python -m pip install --upgrade pip
    pip install -r requirements.txt
    ```
-
-Let me know if you run into any issues! 
