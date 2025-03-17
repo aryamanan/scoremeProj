@@ -66,14 +66,18 @@ public class TableExtractorController {
             
             if (tables.isEmpty()) {
                 log.warn("No tables found in the PDF");
-                return ResponseEntity.badRequest().body("No tables found in the PDF");
+                return ResponseEntity.badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"error\": \"No tables found in the PDF\"}");
             }
 
             // Validate extracted tables
             TableValidationService.ValidationResult validationResult = tableValidationService.validateTableData(tables);
             if (!validationResult.isValid()) {
                 log.warn("Table validation failed: {}", validationResult.issues());
-                return ResponseEntity.badRequest().body(validationResult.issues());
+                return ResponseEntity.badRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"error\": \"" + String.join(", ", validationResult.issues()) + "\"}");
             }
 
             // Export to Excel
@@ -88,7 +92,9 @@ public class TableExtractorController {
             return new ResponseEntity<>(excelFile, headers, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error processing PDF: ", e);
-            return ResponseEntity.badRequest().body("Error processing PDF: " + e.getMessage());
+            return ResponseEntity.badRequest()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"error\": \"Error processing PDF: " + e.getMessage().replace("\"", "'") + "\"}");
         }
     }
 } 

@@ -99,60 +99,96 @@ public class PDFTableExtractorService {
         // Get the first row as headers
         List<TextElement> headerElements = rowGroups.get(region.get(0));
         
-        // Create headers based on column positions
-        List<String> headers = new ArrayList<>();
-        List<StringBuilder> headerBuilders = new ArrayList<>();
-        for (int i = 0; i < columnPositions.size(); i++) {
-            headerBuilders.add(new StringBuilder());
+        // Check if this is a key-value table (typically for account information)
+        boolean isKeyValueTable = false;
+        if (region.size() > 1) {
+            List<TextElement> firstRowElements = rowGroups.get(region.get(1));
+            String firstRowText = firstRowElements.stream()
+                .sorted(Comparator.comparing(TextElement::getX))
+                .map(TextElement::getText)
+                .collect(Collectors.joining(" "));
+            isKeyValueTable = firstRowText.contains(":") || 
+                            firstRowText.toLowerCase().contains("account") ||
+                            firstRowText.toLowerCase().contains("branch") ||
+                            firstRowText.toLowerCase().contains("ifsc");
         }
-        
-        for (TextElement element : headerElements) {
-            int columnIndex = findNearestColumn(element.getX(), columnPositions);
-            if (columnIndex >= 0 && columnIndex < headerBuilders.size()) {
-                if (headerBuilders.get(columnIndex).length() > 0) {
-                    headerBuilders.get(columnIndex).append(" ");
-                }
-                headerBuilders.get(columnIndex).append(element.getText().trim());
-            }
-        }
-        
-        headers = headerBuilders.stream()
-            .map(StringBuilder::toString)
-            .filter(s -> !s.isEmpty())
-            .collect(Collectors.toList());
 
-        // Process each row
+        List<String> headers;
         List<Map<String, String>> rows = new ArrayList<>();
-        for (int i = 1; i < region.size(); i++) {
-            List<TextElement> rowElements = rowGroups.get(region.get(i));
-            Map<String, String> row = new HashMap<>();
-            List<StringBuilder> columnBuilders = new ArrayList<>();
+
+        if (isKeyValueTable) {
+            // For key-value tables, use fixed headers
+            headers = Arrays.asList("Field", "Value");
             
-            for (int j = 0; j < columnPositions.size(); j++) {
-                columnBuilders.add(new StringBuilder());
-            }
-            
-            // Group text elements by column
-            for (TextElement element : rowElements) {
-                int columnIndex = findNearestColumn(element.getX(), columnPositions);
-                if (columnIndex >= 0 && columnIndex < columnBuilders.size()) {
-                    if (columnBuilders.get(columnIndex).length() > 0) {
-                        columnBuilders.get(columnIndex).append(" ");
+            // Process each row as key-value pair
+            for (Float y : region) {
+                List<TextElement> rowElements = rowGroups.get(y);
+                if (rowElements.isEmpty()) continue;
+                
+                // Sort elements by X position to maintain left-to-right order
+                rowElements.sort(Comparator.comparing(TextElement::getX));
+                
+                String rowText = rowElements.stream()
+                    .map(TextElement::getText)
+                    .collect(Collectors.joining(" ")).trim();
+                
+                if (rowText.contains(":")) {
+                    String[] parts = rowText.split(":", 2);
+                    if (parts.length == 2) {
+                        Map<String, String> row = new LinkedHashMap<>(); // Use LinkedHashMap to maintain column order
+                        row.put("Field", parts[0].trim());
+                        row.put("Value", parts[1].trim());
+                        rows.add(row);
                     }
-                    columnBuilders.get(columnIndex).append(element.getText().trim());
+                }
+            }
+        } else {
+            // For regular tables, process headers first
+            Map<Integer, String> headerMap = new LinkedHashMap<>(); // Use LinkedHashMap to maintain column order
+            for (TextElement element : headerElements) {
+                int columnIndex = findNearestColumn(element.getX(), columnPositions);
+                if (columnIndex >= 0) {
+                    String existingHeader = headerMap.getOrDefault(columnIndex, "");
+                    headerMap.put(columnIndex, (existingHeader + " " + element.getText()).trim());
                 }
             }
             
-            // Create row data
-            for (int j = 0; j < Math.min(headers.size(), columnBuilders.size()); j++) {
-                String value = columnBuilders.get(j).toString().trim();
-                if (!value.isEmpty()) {
-                    row.put(headers.get(j), value);
+            // Convert header map to list, maintaining order
+            headers = headerMap.values().stream()
+                .filter(h -> !h.isEmpty())
+                .collect(Collectors.toList());
+
+            // Process data rows
+            for (int i = 1; i < region.size(); i++) {
+                List<TextElement> rowElements = rowGroups.get(region.get(i));
+                if (rowElements.isEmpty()) continue;
+                
+                // Sort elements by X position
+                rowElements.sort(Comparator.comparing(TextElement::getX));
+                
+                Map<Integer, String> columnValues = new LinkedHashMap<>();
+                for (TextElement element : rowElements) {
+                    int columnIndex = findNearestColumn(element.getX(), columnPositions);
+                    if (columnIndex >= 0) {
+                        String existingValue = columnValues.getOrDefault(columnIndex, "");
+                        columnValues.put(columnIndex, (existingValue + " " + element.getText()).trim());
+                    }
                 }
-            }
-            
-            if (!row.isEmpty()) {
-                rows.add(row);
+                
+                // Create row with values in the same order as headers
+                if (!columnValues.isEmpty()) {
+                    Map<String, String> row = new LinkedHashMap<>();
+                    int headerIndex = 0;
+                    for (Map.Entry<Integer, String> entry : columnValues.entrySet()) {
+                        if (headerIndex < headers.size()) {
+                            row.put(headers.get(headerIndex), entry.getValue());
+                            headerIndex++;
+                        }
+                    }
+                    if (!row.isEmpty()) {
+                        rows.add(row);
+                    }
+                }
             }
         }
 

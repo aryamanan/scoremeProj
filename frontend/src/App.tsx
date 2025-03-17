@@ -142,7 +142,7 @@ function App() {
       <Container maxWidth="lg">
         <Box sx={{ my: 4 }}>
           <Typography variant="h3" component="h1" gutterBottom align="center">
-            Bank Statement Analyzer
+            PDF Data Extractor
           </Typography>
           <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
             <PDFUploader onUpload={handlePDFUpload} loading={loading} />

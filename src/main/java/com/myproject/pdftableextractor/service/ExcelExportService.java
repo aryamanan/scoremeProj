@@ -29,7 +29,7 @@ public class ExcelExportService {
             
             for (int i = 0; i < tables.size(); i++) {
                 TableData table = tables.get(i);
-                String sheetName = String.format("Page %d", table.getPageNumber());
+                String sheetName = String.format("Page %d Table %d", table.getPageNumber(), i + 1);
                 Sheet sheet = workbook.createSheet(sheetName);
                 log.debug("Creating sheet: {}", sheetName);
                 
